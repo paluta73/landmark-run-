@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#DDEFF5">
+<title>LANDMARK RUN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#DDEFF5; --paper:#FFFFFF; --ink:#1E2B4F; --muted:#56648A; --line:#B6D3E0; --soft:#EEF7FA;
+  --red:#E8453C; --green:#2F9A5E; --blue:#3A7BD5; --gold:#F2B632; --on-accent:#FFFFFF;
+  --shadow:#1E2B4F;
+  --dot:"DotGothic16","Hiragino Maru Gothic ProN","Osaka",monospace;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121A30; --paper:#1C2744; --ink:#EAF2FA; --muted:#9DB0CC; --line:#33436B; --soft:#18223C; --shadow:#05080F;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121A30; --paper:#1C2744; --ink:#EAF2FA; --muted:#9DB0CC; --line:#33436B; --soft:#18223C; --shadow:#05080F;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;overscroll-behavior:none}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.dot{font-family:var(--dot);letter-spacing:.02em}
+img,svg,canvas{max-width:100%}
+#app{position:relative;height:100dvh;display:flex;flex-direction:column;max-width:560px;margin:0 auto;overflow:hidden}
+body.preview{background:repeating-linear-gradient(45deg,var(--soft) 0 12px,var(--bg) 12px 24px)}
+body.preview #app{max-width:390px;height:min(844px,100dvh);margin:max(0px,calc((100dvh - 844px)/2)) auto 0;border:3px solid var(--ink);border-radius:28px;background:var(--bg)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(96px + env(safe-area-inset-bottom))}
+.hidden{display:none!important}
+
+/* nav */
+nav.tabs{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:var(--paper);border-top:3px solid var(--ink);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav.tabs button{background:none;border:0;padding:8px 0 10px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted)}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-current="page"]{color:var(--ink);font-weight:700}
+nav.tabs button[aria-current="page"] svg{color:var(--red)}
+
+/* blocks */
+.panel{background:var(--paper);border:2px solid var(--ink);border-radius:6px;box-shadow:4px 4px 0 var(--shadow);padding:14px;margin-bottom:16px}
+.panel.flat{box-shadow:none;border-color:var(--line)}
+h1,h2,h3{margin:0;line-height:1.3}
+h2{font-family:var(--dot);font-size:22px;font-weight:400;margin:4px 0 12px}
+h3{font-size:15px;font-weight:700}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.grow{flex:1;min-width:0}
+.chip{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;border:1.5px solid currentColor;white-space:nowrap}
+.plate{display:inline-block;font-size:12px;font-weight:700;background:var(--gold);color:#1E2B4F;padding:0 8px;border-radius:3px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.18);white-space:nowrap}
+.plate::before{content:"［"}.plate::after{content:"］"}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:2px solid var(--ink);background:var(--paper);border-radius:6px;padding:10px 14px;font-weight:700;box-shadow:3px 3px 0 var(--shadow)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.btn.primary{background:var(--red);color:var(--on-accent)}
+.btn.block{width:100%}
+.btn.ghost{box-shadow:none;border-color:var(--line)}
+.btn[disabled]{opacity:.45}
+input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px;border:2px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink)}
+
+/* home */
+.hero{display:grid;grid-template-columns:132px 1fr;gap:14px;align-items:center}
+.sprite-tile{background:var(--soft);border:2px solid var(--ink);border-radius:6px;display:grid;place-items:center;aspect-ratio:1;image-rendering:pixelated}
+.sprite-tile svg{width:82%;height:82%}
+.daynum{font-family:var(--dot);font-size:40px;line-height:1}
+.daybar{display:grid;grid-template-columns:repeat(14,1fr);gap:2px;margin-top:8px}
+.daybar i{height:10px;background:var(--line);border-radius:1px}
+.daybar i.on{background:var(--ink)}
+.daybar i.mark{outline:2px solid var(--gold);outline-offset:-2px}
+.daybar i.today{background:var(--red)}
+.runstart{position:relative;width:100%;border:3px solid var(--ink);border-radius:999px;background:var(--red);color:#fff;padding:22px 0;font-family:var(--dot);font-size:30px;letter-spacing:.08em;box-shadow:0 6px 0 var(--shadow);margin:6px 0 22px}
+.runstart:active{transform:translateY(4px);box-shadow:0 2px 0 var(--shadow)}
+.runstart small{display:block;font-family:var(--body);font-size:12px;letter-spacing:0;opacity:.9}
+.bubble{position:relative;background:var(--paper);border:2px solid var(--ink);border-radius:10px;padding:10px 12px;font-size:14px}
+.bubble::before{content:"";position:absolute;left:22px;top:-9px;width:14px;height:14px;background:var(--paper);border-left:2px solid var(--ink);border-top:2px solid var(--ink);transform:rotate(45deg)}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);text-align:center}
+.stats3 b{display:block;font-family:var(--dot);font-size:22px;font-weight:400;line-height:1.2}
+.stats3 span{font-size:11px;color:var(--muted)}
+.stats3>div+div{border-left:1.5px dashed var(--line)}
+
+/* run */
+#run{position:absolute;inset:0;background:var(--ink);color:var(--bg);z-index:20;display:flex;flex-direction:column;padding:calc(18px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom))}
+#run .big{font-family:var(--dot);font-size:clamp(64px,22vw,96px);line-height:1;text-align:center}
+#run .label{text-align:center;font-size:13px;opacity:.75;margin-bottom:2px}
+#run .mid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+#run .mid div{text-align:center;border:2px solid rgba(255,255,255,.25);border-radius:6px;padding:10px 0}
+#run .mid b{display:block;font-family:var(--dot);font-size:34px;font-weight:400;line-height:1.1}
+#run .gps{font-size:12px;text-align:center;opacity:.8;margin-top:10px;min-height:1.6em}
+#run .lmrow{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+#run .lmrow span{font-size:12px;border:1.5px solid rgba(255,255,255,.4);border-radius:99px;padding:2px 10px}
+#run .lmrow span.got{background:var(--gold);color:#1E2B4F;border-color:var(--gold);font-weight:700}
+.hold{margin-top:auto;position:relative;width:100%;height:84px;border-radius:999px;border:3px solid #fff;background:transparent;color:#fff;font-family:var(--dot);font-size:26px;overflow:hidden}
+.hold .fill{position:absolute;inset:0;background:var(--red);transform-origin:left;transform:scaleX(0)}
+.hold span{position:relative}
+.toast{position:absolute;left:16px;right:16px;top:calc(16px + env(safe-area-inset-top));background:var(--gold);color:#1E2B4F;border:3px solid #1E2B4F;border-radius:8px;padding:12px 14px;font-weight:900;z-index:40;box-shadow:4px 4px 0 #1E2B4F;animation:pop .35s ease-out}
+@keyframes pop{from{transform:translateY(-20px);opacity:0}to{transform:none;opacity:1}}
+
+/* sheets & modals */
+.overlay{position:absolute;inset:0;background:rgba(10,15,30,.55);z-index:30;display:flex;align-items:flex-end}
+.sheet{background:var(--bg);width:100%;max-height:92%;overflow-y:auto;border-top:3px solid var(--ink);border-radius:14px 14px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom))}
+.center-modal{align-items:center;justify-content:center;padding:20px}
+.center-modal .sheet{border:3px solid var(--ink);border-radius:10px;max-width:360px;text-align:center}
+.evo{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 0}
+.evo .sprite-tile{width:110px}
+.evo .after{animation:evo 1.4s steps(6) both}
+@keyframes evo{0%{filter:brightness(4) saturate(0);transform:scale(.6)}60%{filter:brightness(2.5) saturate(0);transform:scale(1.1)}100%{filter:none;transform:none}}
+
+/* lists */
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1.5px dashed var(--line)}
+.list li:last-child{border-bottom:0}
+.lm-badge{width:40px;height:40px;flex:none;border:2px solid var(--ink);border-radius:6px;display:grid;place-items:center;font-family:var(--dot);font-size:22px;color:#fff}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:2px solid var(--ink);border-radius:6px;overflow:hidden;margin:10px 0}
+.seg button{border:0;background:var(--paper);padding:8px 0;font-size:13px;font-weight:700}
+.seg button+button{border-left:2px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.rank{font-family:var(--dot);font-size:20px;width:34px;text-align:center;flex:none}
+.me{background:var(--soft)}
+.dex{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.dex .cell{text-align:center;font-size:11px}
+.dex .cell .sprite-tile{margin-bottom:4px}
+.ach{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.ach.locked .plate{background:var(--line);color:var(--muted);box-shadow:none}
+.forms{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:6px;text-align:center;font-size:11px}
+.forms .arrow{font-family:var(--dot);color:var(--muted)}
+.meter{height:12px;border:2px solid var(--ink);border-radius:3px;background:var(--soft);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--green)}
+canvas.route{width:100%;height:220px;background:var(--soft);border:2px solid var(--ink);border-radius:6px;display:block}
+.gate{position:fixed;inset:0;display:grid;place-items:center;padding:24px;text-align:center;background:var(--bg);z-index:100}
+.gate .inner{max-width:420px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px}
+.kv dt{color:var(--muted)}.kv dd{margin:0}
+.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.iconbtn{background:none;border:2px solid var(--line);border-radius:6px;width:40px;height:40px;display:grid;place-items:center}
+.logo{font-family:var(--dot);font-size:18px;line-height:1}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="gate" class="gate hidden">
+  <div class="inner">
+    <div id="gateSprite" class="sprite-tile" style="width:120px;margin:0 auto 16px"></div>
+    <h2>スマートフォンで開いてください</h2>
+    <p class="muted">LANDMARK RUNは、GPSで走行を記録するスマートフォン専用のアプリです。スマホのブラウザ（Chrome推奨）でこのページのリンクを開いてください。</p>
+    <button class="btn ghost" id="previewBtn">PCで画面だけ確認する</button>
+    <p class="small muted">PCではGPS計測は使えません。デモ走行で動作を確認できます。</p>
+  </div>
+</div>
+<div id="app">
+  <main class="scroll" id="view"></main>
+  <nav class="tabs hidden" id="tabs"></nav>
+</div>
+
+<script>
+"use strict";
+/* ============ basic utils ============ */
+const $=(s,r=document)=>r.querySelector(s);
+const DAY=86400000;
+const pad=n=>String(n).padStart(2,"0");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const KEY="landmark_run_v1";
+let S=null;
+function now(){return Date.now()+((S&&S.dayOffset)||0)*DAY}
+function dstr(t){const d=new Date(t);return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function today(){return dstr(now())}
+function daysBetween(a,b){const[y1,m1,d1]=a.split("-").map(Number),[y2,m2,d2]=b.split("-").map(Number);return Math.round((Date.UTC(y2,m2-1,d2)-Date.UTC(y1,m1-1,d1))/DAY)}
+function weekKey(t){const d=new Date(t);const k=(d.getDay()+6)%7;return dstr(new Date(d.getFullYear(),d.getMonth(),d.getDate()-k).getTime())}
+function monthKey(t){return dstr(t).slice(0,7)}
+function fmtDur(sec){sec=Math.max(0,Math.round(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return h?`${h}:${pad(m)}:${pad(s)}`:`${pad(m)}:${pad(s)}`}
+function fmtPace(spk){if(!spk||!isFinite(spk)||spk>3600)return "--'--\"";const m=Math.floor(spk/60),s=Math.round(spk%60);return `${m}'${pad(s===60?59:s)}"`}
+function fmtKm(km){return (Math.floor(km*100)/100).toFixed(2)}
+function fmtDate(t){const d=new Date(t);return `${d.getMonth()+1}/${d.getDate()}（${"日月火水木金土"[d.getDay()]}）${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function hav(a,b){const R=6371000,r=Math.PI/180;const dLat=(b[0]-a[0])*r,dLng=(b[1]-a[1])*r;const x=Math.sin(dLat/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function offset(p,dx,dy){const lat=p[0]+dy/111320;const lng=p[1]+dx/(111320*Math.cos(p[0]*Math.PI/180));return[lat,lng]}
+function vib(p){try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
+
+/* ============ landmarks (仮) ============ */
+function defaultLandmarks(){
+  const park=[37.4265,138.8895];
+  return [
+    {id:"A",name:"長生橋",type:"pass",start:[37.4452,138.8318],goal:[37.4431,138.8402],r:40,desc:"信濃川にかかる長い橋。端から端まで渡りきると攻略。"},
+    {id:"B",name:"悠久山公園",type:"lap",cps:[offset(park,0,220),offset(park,220,0),offset(park,0,-220),offset(park,-220,0)],r:45,desc:"緑の多い公園。4つのチェックポイントを順番に回って1周。"},
+    {id:"C",name:"長岡駅",type:"arrival",center:[37.4477,138.8539],r:60,desc:"まちの玄関口。ランニング中にエリアへ到達すると攻略。"}
+  ];
+}
+const TYPE={pass:"通過型",lap:"周回型",arrival:"到達型"};
+const LMCOLOR={A:"#E8453C",B:"#2F9A5E",C:"#3A7BD5"};
+function LMS(){return S.landmarks||defaultLandmarks()}
+function lmById(id){return LMS().find(l=>l.id===id)}
+
+/* ============ characters ============ */
+const LINE={A:{name:"はしわたりねこ",hint:"橋をよく渡った子"},B:{name:"もりめぐりねこ",hint:"公園をよく回った子"},C:{name:"えきまえねこ",hint:"駅によく立ち寄った子"}};
+const FINAL={A:["かわかぜねこ","はしげたねこ","大河ランナーねこ"],B:["こかげねこ","どんぐりねこ","山かけねこ"],C:["まちかどねこ","始発ねこ","快速ねこ"]};
+const TIER=["マイペース型","コツコツ型","アクティブ型"];
+const TIERHINT=["自分のペースを大切にすると…","こまめに走る日が多いと…","よく走り、しっかり距離をのばすと…"];
+const STAR=t=>"★".repeat(t);
+function charName(c){if(!c)return "水玉ねこ";if(c.stage===3&&c.final)return FINAL[c.line][c.final-1];if(c.stage>=2)return LINE[c.line].name;return "水玉ねこ"}
+const BASE=["................","..K..........K..",".KWK........KWK.",".KWWK......KWWK.",".KWWWKKKKKKWWWK.","KWWHWWHWWHWWHWWK","KWWWWWWWWWWWWWWK","KWWWKWWWWWWKWWWK","KWWWKWWWWWWKWWWK","KWPWWWWKKWWWWPWK","KWWWWWWWWWWWWWWK",".KWWDWWWWWWDWWK.",".KWWWWWDWWWWWWK.",".KWDWWWWWWWWDWK.","..KWWKKKKKKWWK..","..KKK......KKK.."];
+const LAYERS={
+  A:{5:"KBBBBBBBBBBBBBBK",4:"..............BB"},
+  B:{2:"......BBBB......",3:".KWWKBBBBBBKWWK.",4:".KWWBBBBBBBBWWK.",5:"KBBBBBBBBBBBBBBK"},
+  C:{10:"KBWWWWWWWWWWWWBK",11:".KBBBBBBBBBBBBK.",12:".KBBBBBBBBBBBBK.",13:".KBBBBBBBBBBBBK."},
+  t1:{14:"..KYY......YYK..",15:"..LLL......LLL.."},
+  t2:{11:".KBBBBBBBBBBBBK.",12:".KBBBBBWWBBBBBK.",13:".KBBBBBBBBBBBBK.",15:"..LLL......LLL.."},
+  t3:{11:".KWBBBBBBBBBBWK.",12:".KBBBBBYBBBBBBK.",13:".KBBBBBBBBBBBBK.",7:"..SSSSS..SSSSS..",8:"...SSS....SSS...",15:"..YYY......YYY.."}
+};
+function spriteSVG(opt={}){
+  const {stage=1,line="A",tier=0,sil=false}=opt;
+  const g=BASE.map(r=>r.split(""));
+  const apply=L=>{for(const k in L){const row=L[k].split("");row.forEach((ch,i)=>{if(ch!==".")g[k][i]=ch})}};
+  if(stage>=2)apply(LAYERS[line]);
+  if(stage>=3&&tier)apply(LAYERS["t"+tier]);
+  const col={K:"#1E2B4F",W:"#FFFFFF",H:"#D5E0EC",P:"#F7A8B8",D:"#7CC4E8",B:LMCOLOR[line],L:LMCOLOR[line],Y:"#F2B632",S:"#2A3350"};
+  let r="";
+  g.forEach((row,y)=>row.forEach((ch,x)=>{if(ch===".")return;const c=sil?"#8E9BB3":col[ch];r+=`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${c}"/>`}));
+  return `<svg viewBox="0 0 16 16" shape-rendering="crispEdges" role="img" aria-label="キャラクター">${r}</svg>`;
+}
+function cycleSprite(c){return spriteSVG({stage:c?c.stage:1,line:c&&c.line||"A",tier:c&&c.final||0})}
+
+/* ============ achievements ============ */
+const ACH=[
+ [1,"連続ログイン3日","三日目の壁",x=>x.streak>=3],
+ [2,"連続ログイン5日","まだ走ってる",x=>x.streak>=5],
+ [3,"連続ログイン10日","もう習慣かも",x=>x.streak>=10],
+ [4,"累計ランニング10回","走る側の人",x=>x.runs>=10],
+ [5,"累計ランニング30回","そこそこ常連",x=>x.runs>=30],
+ [6,"累計ランニング100回","走るのが日常",x=>x.runs>=100],
+ [7,"累計30km","30kmの人",x=>x.km>=30],
+ [8,"累計100km","百キロ越え",x=>x.km>=100],
+ [9,"累計300km","三百キロの向こう側",x=>x.km>=300],
+ [10,"ランドマーク3か所攻略","寄り道上手",x=>x.lms>=3],
+ [11,"ランドマーク10か所攻略","地図の外へ",x=>x.lms>=10],
+ [12,"ランドマーク30か所攻略","街を走り尽くす",x=>x.lms>=30],
+ [13,"1地域コンプリート","この街、履修済み",x=>x.regions>=1],
+ [14,"3地域コンプリート","遠征癖あり",x=>x.regions>=3],
+ [15,"5地域コンプリート","旅先でも走る",x=>x.regions>=5],
+ [16,"ランキングTOP100入り","名前が載った",x=>x.f.rank100],
+ [17,"ランキングTOP10入り","上のほうにいます",x=>x.f.rank10],
+ [18,"ランキング1位","今日は先頭",x=>x.f.rank1],
+ [19,"初めて最終進化","育ちました",x=>x.finals>=1],
+ [20,"キャラ3種獲得","沼の入口",x=>x.dex>=3],
+ [21,"キャラ9種コンプリート","全員集合",x=>x.dex>=9],
+ [22,"7日以上空いて再開","ただいま",x=>x.f.back7],
+ [23,"14日以上空いて再開","何食わぬ顔で復帰",x=>x.f.back14],
+ [24,"長期休止から3回復帰","戻る才能",x=>(S.comebacks||0)>=3],
+ [25,"1kmごとのペース差2分以上","ペース不在",x=>x.f.paceGap],
+ [26,"後半の平均ペースが前半より速い","後半型です",x=>x.f.negSplit],
+ [27,"最初の1kmが突出して速くその後失速","序盤だけ本気",x=>x.f.fastStart],
+ [28,"通常平均より50%以上長く走る","気づけば遠い",x=>x.f.far],
+ [29,"1ランで新規ランドマーク2か所以上","寄り道が本編",x=>x.f.detour],
+ [30,"育成最終日に最低条件を達成","間に合った人",x=>x.f.justInTime]
+].map(([id,cond,plate,test])=>({id,cond,plate,test}));
+function plateName(id){const a=ACH.find(a=>a.id===id);return a?a.plate:""}
+function loginStreak(){const set=new Set(S.loginDays);let n=0;let t=now();while(set.has(dstr(t))){n++;t-=DAY}return n}
+function checkAchievements(){
+  const lmsVisited=new Set();S.runs.forEach(r=>r.visits.forEach(v=>lmsVisited.add(v.lm)));
+  const x={streak:loginStreak(),runs:S.runs.length,km:S.runs.reduce((a,r)=>a+r.dist,0),lms:lmsVisited.size,
+    regions:LMS().every(l=>lmsVisited.has(l.id))?1:0,finals:S.cycles.filter(c=>c.status==="done").length,dex:Object.keys(S.collection).length,f:S.flags};
+  const fresh=[];
+  ACH.forEach(a=>{if(!S.achievements[a.id]&&a.test(x)){S.achievements[a.id]=now();fresh.push(a)}});
+  return fresh;
+}
+
+/* ============ state ============ */
+function blankState(){return{v:1,uid:"local_"+Math.random().toString(36).slice(2,10),nickname:"",plate:null,runs:[],cycles:[],collection:{},achievements:{},loginDays:[],tickets:0,comebacks:0,flags:{},dayOffset:0,landmarks:null,aiLast:"",events:[]}}
+function load(){try{const j=JSON.parse(localStorage.getItem(KEY));if(j&&j.v===1)return j}catch(e){}return null}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+S=load();
+function activeCycle(){return S.cycles.find(c=>c.status==="active")||null}
+function lastCycle(){return S.cycles[S.cycles.length-1]||null}
+function cycleDay(c){return daysBetween(c.start,today())+1}
+function newCycle(){S.cycles.push({id:"c"+Date.now(),start:today(),stage:1,line:null,final:0,status:"active"});save()}
+function runsInCycle(c,maxDay){return S.runs.filter(r=>{const d=daysBetween(c.start,dstr(r.start))+1;return d>=1&&d<=maxDay}).sort((a,b)=>a.start-b.start)}
+function dominantLine(c){
+  const counts={},reach={};
+  runsInCycle(c,7).flatMap(r=>r.visits).sort((a,b)=>a.t-b.t).forEach(v=>{counts[v.lm]=(counts[v.lm]||0)+1;(reach[v.lm]||(reach[v.lm]={}))[counts[v.lm]]=v.t});
+  const max=Math.max(0,...Object.values(counts));
+  if(!max)return{line:"A",none:true};
+  const cands=Object.keys(counts).filter(k=>counts[k]===max).sort((a,b)=>reach[a][max]-reach[b][max]);
+  return{line:cands[0],none:false};
+}
+function progress(){
+  const c=activeCycle();if(!c)return;
+  const d=cycleDay(c);
+  if(c.stage===1&&d>7){const dl=dominantLine(c);c.line=dl.line;c.stage=2;S.events.push({kind:"evo2",line:c.line,none:dl.none})}
+  if(c.stage===2&&d>14){
+    const rs=runsInCycle(c,14);const n=rs.length;const km=rs.reduce((a,r)=>a+r.dist,0);
+    if(n>=4&&km>=7){
+      const avg=km/n,wk=n/2;const freq=wk<3?0:wk<5?1:2;const tier=freq===0?1:(avg<5?2:3);
+      c.final=tier;c.stage=3;c.status="done";c.judged=now();
+      const id=c.line+"-"+tier;if(!S.collection[id])S.collection[id]=now();
+      let cn=0,ck=0;for(const r of rs){cn++;ck+=r.dist;if(cn>=4&&ck>=7){if(daysBetween(c.start,dstr(r.start))+1===14)S.flags.justInTime=true;break}}
+      S.events.push({kind:"final",line:c.line,tier});
+    }else{
+      c.status="failed";c.judged=now();S.tickets=(S.tickets||0)+1;
+      S.events.push({kind:"failed",runs:n,km});
+    }
+  }
+  save();
+}
+
+/* ============ runtime capabilities ============ */
+const RT={db:null,sample:null,uid:null};
+(async()=>{
+  if(!window.claude||!window.claude.use)return;
+  try{const u=await window.claude.use("user");if(u){const id=await u.id();if(id)RT.uid=String(id).replace(/[^A-Za-z0-9_-]/g,"_").slice(0,120)}}catch(e){}
+  try{RT.db=await window.claude.use("db");if(RT.db&&S&&S.nickname)pushRanking()}catch(e){}
+  try{RT.sample=await window.claude.use("sample")}catch(e){}
+})();
+function myId(){return RT.uid||S.uid}
+
+/* ============ ranking ============ */
+const METRICS={pass:[["w","今週"],["m","今月"],["best","最速"],["total","累計"]],lap:[["w","今週"],["m","今月"],["best","最速"],["total","累計"]],arrival:[["w","今週"],["m","今月"],["dist","総距離"],["total","累計"]]};
+function lmStats(id){
+  const wk=weekKey(now()),mo=monthKey(now());let w=0,m=0,total=0,best=null,dist=0;
+  S.runs.forEach(r=>{const vs=r.visits.filter(v=>v.lm===id);if(!vs.length)return;dist+=r.dist;vs.forEach(v=>{total++;if(weekKey(v.t)===wk)w++;if(monthKey(v.t)===mo)m++;if(v.time!=null&&(best==null||v.time<best))best=v.time})});
+  return{wk,w,mo,m,total,best,dist:Math.round(dist*100)/100};
+}
+function myEntry(){const st={};LMS().forEach(l=>st[l.id]=lmStats(l.id));return{id:myId(),nickname:S.nickname,plate:S.plate?plateName(S.plate):"",stats:st,updatedAt:now()}}
+async function pushRanking(){
+  if(!RT.db||!S.nickname)return;
+  const e=myEntry();
+  try{await RT.db.doc("ranking/"+e.id).set({nickname:e.nickname,plate:e.plate,stats:e.stats,updatedAt:e.updatedAt})}catch(err){}
+}
+async function loadEntries(){
+  const mine=myEntry();let list=[];let shared=false;
+  if(RT.db){try{const snap=await RT.db.collection("ranking").limit(500).get();snap.docs.forEach(d=>{const v=d.data();if(v&&d.id!==mine.id)list.push({id:d.id,...v})});shared=true}catch(e){}}
+  list.push(mine);return{list,shared};
+}
+function metricValue(e,lm,key){
+  const s=e.stats&&e.stats[lm];if(!s)return null;
+  if(key==="w")return s.wk===weekKey(now())&&s.w>0?s.w:null;
+  if(key==="m")return s.mo===monthKey(now())&&s.m>0?s.m:null;
+  if(key==="best")return s.best!=null&&s.best>0?s.best:null;
+  if(key==="dist")return s.dist>0?s.dist:null;
+  return s.total>0?s.total:null;
+}
+function rankList(entries,lm,key){
+  const rows=entries.map(e=>({e,v:metricValue(e,lm,key)})).filter(r=>r.v!=null&&typeof r.v==="number");
+  rows.sort((a,b)=>key==="best"?a.v-b.v:b.v-a.v);
+  let last=null,rank=0;rows.forEach((r,i)=>{if(r.v!==last){rank=i+1;last=r.v}r.rank=rank});
+  return rows;
+}
+function fmtMetric(key,v){if(key==="best")return fmtDur(v);if(key==="dist")return fmtKm(v)+"km";return v+"回"}
+
+/* ============ AI partner ============ */
+function aiContext(run,fresh){
+  const prev=S.runs.filter(r=>r.id!==run.id);const c=activeCycle()||lastCycle();
+  const visitedNames=[...new Set(run.visits.map(v=>lmById(v.lm)?.name).filter(Boolean))];
+  const everVisited=new Set(S.runs.flatMap(r=>r.visits.map(v=>v.lm)));
+  const counts={};if(c)runsInCycle(c,14).forEach(r=>r.visits.forEach(v=>counts[v.lm]=(counts[v.lm]||0)+1));
+  const fav=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];
+  return{today:{distance_km:+run.dist.toFixed(2),time:fmtDur(run.dur),avg_pace_per_km:fmtPace(run.pace),landmarks:visitedNames},
+    history:{run_count_before:prev.length,last_distance_km:prev.length?+prev[prev.length-1].dist.toFixed(2):null,avg_distance_km:prev.length?+(prev.reduce((a,r)=>a+r.dist,0)/prev.length).toFixed(2):null},
+    not_visited_yet:LMS().filter(l=>!everVisited.has(l.id)).map(l=>l.name),all_landmarks:LMS().map(l=>l.name),
+    growth:c?{day:Math.min(14,cycleDay(c)),form:charName(c),often_visited:fav?lmById(fav)?.name:null}:null,
+    new_nameplates:fresh.map(a=>a.plate)};
+}
+function fallbackComment(run,fresh){
+  const prev=S.runs.filter(r=>r.id!==run.id);const lp=prev[prev.length-1];
+  let s=`今日は${fmtKm(run.dist)}km、おつかれさま！`;
+  if(!prev.length)s+="はじめの一歩、ちゃんと記録できたよ。";
+  else if(lp&&run.dist>lp.dist+0.05)s+="前回より少し長く走れたね。";
+  else s+=`これで${prev.length+1}回目。続いてるのがえらい。`;
+  if(fresh.length)s+=`「${fresh[0].plate}」も手に入れたね。`;
+  const ev=new Set(S.runs.flatMap(r=>r.visits.map(v=>v.lm)));const nv=LMS().find(l=>!ev.has(l.id));
+  s+=nv?`次は${nv.name}まで寄り道してみる？`:"次も気持ちのいいペースでいこう。";
+  return s;
+}
+async function aiComment(run,fresh,onText){
+  const fb=fallbackComment(run,fresh);
+  if(!RT.sample)return fb;
+  const c=activeCycle()||lastCycle();
+  const prompt=`あなたはランニングアプリ「LANDMARK RUN」の相棒キャラクター「${charName(c)}」（ドット絵のねこ）です。ランニング初心者のユーザー「${S.nickname}」が走り終えた直後に、短いコメントを返します。
+
+ルール:
+- 日本語、全体で70〜110字、2〜3文。やわらかい話し言葉。絵文字は使わない。
+- 構成は ①今日の結果へのリアクション（数値を1つ具体的に） ②過去との比較、または続けていることへの肯定 ③次回の小さな提案（未訪問やあまり行っていないランドマークへの寄り道など）。
+- 医療・健康に関する断定をしない。無理な距離・頻度・スピードを煽らない。
+- 進化の条件（回数・距離の数値や計算式）は絶対に言わない。「最近○○によく行ってるね」程度の方向性のヒントのみ可。
+- 新しいネームプレートがあれば一言だけ触れてよい。
+- コメント本文だけを出力する。
+
+データ(JSON): ${JSON.stringify(aiContext(run,fresh))}`;
+  try{
+    const res=await RT.sample(prompt,{modelTier:"quick",cache:false,onText:({text})=>onText&&onText(text)});
+    const t=(res&&res.text||"").trim();return t||fb;
+  }catch(e){return fb}
+}
+
+/* ============ router & render ============ */
+const ICON={
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 11l9-7 9 7v9H5v-9"/><path d="M10 20v-6h4v6"/></svg>',
+  lm:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+  cat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 20V6l4 3h8l4-3v14z"/><path d="M9 14h.01M15 14h.01" stroke-width="3"/></svg>',
+  ach:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="7" width="18" height="10" rx="1"/><path d="M7 12h10"/></svg>',
+  log:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 5h16M4 12h16M4 19h10"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>'
+};
+const TABS=[["home","ホーム"],["lm","ランドマーク"],["cat","育成"],["ach","実績"],["log","履歴"]];
+let route={tab:"home",sub:null};
+function go(tab,sub=null){route={tab,sub};render();$("#view").scrollTop=0}
+function renderTabs(){
+  const n=$("#tabs");n.classList.remove("hidden");
+  n.innerHTML=TABS.map(([k,l])=>`<button data-tab="${k}" ${route.tab===k?'aria-current="page"':""}>${ICON[k]}<span>${l}</span></button>`).join("");
+  n.querySelectorAll("button").forEach(b=>b.onclick=()=>go(b.dataset.tab));
+}
+function render(){
+  const v=$("#view");
+  if(!S||!S.nickname){$("#tabs").classList.add("hidden");v.innerHTML=onboardingHTML();bindOnboarding();return}
+  renderTabs();
+  const f={home:homeHTML,lm:route.sub?lmDetailHTML:lmListHTML,cat:growHTML,ach:achHTML,log:route.sub?runDetailHTML:logHTML}[route.tab];
+  v.innerHTML=f();
+  bind[route.tab]&&bind[route.tab]();
+  if(route.tab==="home")showEvents();
+}
+
+/* ---------- onboarding ---------- */
+function onboardingHTML(){
+  return `<div style="padding-top:12px">
+  <div class="logo">LANDMARK RUN</div>
+  <p class="muted small" style="margin:2px 0 18px">走る・巡る・育てる。</p>
+  <div class="panel" style="text-align:center">
+    <div class="sprite-tile" style="width:150px;margin:0 auto 10px">${spriteSVG()}</div>
+    <h3>水玉ねこと、はじめよう</h3>
+    <p class="small muted" style="margin:4px 0 0">走ってランドマークを巡るほど、この子は育っていきます。14日後、どんな姿になるかはあなたの走り方しだい。</p>
+  </div>
+  <div class="panel">
+    <h3 style="margin-bottom:8px">位置情報の使いかた</h3>
+    <p class="small" style="margin:0 0 6px">RUN中だけGPSを使い、走行距離の計算とランドマークの到達判定を行います。</p>
+    <p class="small" style="margin:0 0 6px">走行ルートはこの端末の中だけに保存し、他のユーザーには公開しません。ランキングに出るのはニックネーム・ネームプレート・回数やタイムだけです。</p>
+    <p class="small" style="margin:0">走行中は画面操作をせず、周りの安全を最優先にしてください。</p>
+  </div>
+  <label for="nick" class="small" style="font-weight:700">ニックネーム（ランキングに表示されます）</label>
+  <input id="nick" type="text" maxlength="12" placeholder="例：RUN_TARO" autocomplete="off" style="margin:6px 0 14px">
+  <button class="btn primary block" id="startBtn" disabled>同意して育成をはじめる</button>
+  </div>`;
+}
+function bindOnboarding(){
+  const i=$("#nick"),b=$("#startBtn");
+  i.oninput=()=>b.disabled=!i.value.trim();
+  b.onclick=()=>{S=S||blankState();S.nickname=i.value.trim().slice(0,12);if(!activeCycle())newCycle();touchLogin();save();pushRanking();render()};
+}
+function touchLogin(){const t=today();if(!S.loginDays.includes(t)){S.loginDays.push(t);S.loginDays=S.loginDays.slice(-60)}}
+
+/* ---------- home ---------- */
+function dayBar(c){
+  const d=c?Math.min(cycleDay(c),15):0;
+  return `<div class="daybar" aria-label="育成14日間">${Array.from({length:14},(_,i)=>`<i class="${i+1<d?"on":""} ${i+1===d?"today":""} ${i===6||i===13?"mark":""}"></i>`).join("")}</div>`;
+}
+function homeHTML(){
+  const c=activeCycle();const lc=c||lastCycle();const last=S.runs[S.runs.length-1];
+  let status="";
+  if(c){const d=cycleDay(c);status=c.stage===1?`DAY7が終わると、よく行った場所に合わせて姿が変わるよ`:`DAY14が終わると最終進化の判定。どう育つかな`;if(d===7&&c.stage===1)status="今日がDAY7。今日のランも進化に反映されるよ";if(d===14)status="今日が育成の最終日！"}
+  else status="この子の育成は終わりました。次の子を育てよう";
+  return `<div class="head"><div><div class="logo">LANDMARK RUN</div><div class="small muted">${esc(S.nickname)} ${S.plate?`<span class="plate">${esc(plateName(S.plate))}</span>`:""}</div></div>
+    <button class="iconbtn" id="settingsBtn" aria-label="設定">${ICON.gear}</button></div>
+  <div class="panel">
+    <div class="hero">
+      <div class="sprite-tile">${cycleSprite(lc)}</div>
+      <div>
+        <div class="small muted">${esc(charName(lc))}</div>
+        ${c?`<div class="daynum">DAY ${Math.min(cycleDay(c),14)}<span class="small muted" style="font-family:var(--body)"> /14</span></div>`:`<div class="daynum" style="font-size:26px">育成おわり</div>`}
+        ${dayBar(c)}
+        <div class="small" style="margin-top:8px">${status}</div>
+      </div>
+    </div>
+  </div>
+  <button class="runstart" id="runBtn">RUN START<small>GPSで計測をはじめる</small></button>
+  ${S.aiLast?`<div class="small muted" style="margin:0 0 12px 4px">${esc(charName(lc))}のひとこと</div><div class="bubble" style="margin-bottom:18px">${esc(S.aiLast)}</div>`:""}
+  <div class="panel flat">
+    <div class="row between" style="margin-bottom:8px"><h3>直近の記録</h3>${last?`<span class="small muted">${fmtDate(last.start)}</span>`:""}</div>
+    ${last?`<div class="stats3"><div><b>${fmtKm(last.dist)}</b><span>km</span></div><div><b>${fmtDur(last.dur)}</b><span>時間</span></div><div><b>${fmtPace(last.pace)}</b><span>平均ペース/km</span></div></div>`
+      :`<p class="small muted" style="margin:0">まだ記録がありません。まずは近くを1kmだけ、走ってみよう。</p>`}
+  </div>
+  <div class="row small muted" style="justify-content:center;gap:16px"><span>連続ログイン ${loginStreak()}日</span><span>累計 ${fmtKm(S.runs.reduce((a,r)=>a+r.dist,0))}km</span><span>チケット ${S.tickets||0}</span></div>`;
+}
+const bind={
+  home(){
+    $("#runBtn").onclick=openRunSheet;
+    $("#settingsBtn").onclick=openSettings;
+  },
+  lm(){
+    document.querySelectorAll("[data-lm]").forEach(b=>b.onclick=()=>go("lm",{id:b.dataset.lm,metric:"w"}));
+    const back=$("#backBtn");if(back)back.onclick=()=>go("lm");
+    document.querySelectorAll("[data-metric]").forEach(b=>b.onclick=()=>{route.sub.metric=b.dataset.metric;render()});
+    if(route.sub)fillRanking();
+  },
+  cat(){
+    const nb=$("#nextCycle");if(nb)nb.onclick=()=>{newCycle();render()};
+  },
+  ach(){
+    document.querySelectorAll("[data-equip]").forEach(b=>b.onclick=()=>{const id=+b.dataset.equip;S.plate=S.plate===id?null:id;save();pushRanking();render()});
+  },
+  log(){
+    document.querySelectorAll("[data-run]").forEach(b=>b.onclick=()=>go("log",{id:b.dataset.run}));
+    const back=$("#backBtn");if(back)back.onclick=()=>go("log");
+    if(route.sub){const r=S.runs.find(r=>r.id===route.sub.id);if(r)drawRoute($("#routeCanvas"),r)}
+  }
+};
+
+/* ---------- landmarks ---------- */
+function lmBadge(l){return `<div class="lm-badge" style="background:${LMCOLOR[l.id]}">${l.id}</div>`}
+function lmListHTML(){
+  const c=activeCycle();const cc={};if(c)runsInCycle(c,14).forEach(r=>r.visits.forEach(v=>cc[v.lm]=(cc[v.lm]||0)+1));
+  return `<h2>ランドマーク</h2><p class="small muted" style="margin-top:-6px">長岡エリア（MVP）｜3か所</p>
+  ${LMS().map(l=>{const st=lmStats(l.id);return `<div class="panel">
+    <div class="row">${lmBadge(l)}<div class="grow"><div class="row between"><h3>${esc(l.name)}</h3><span class="chip" style="color:${LMCOLOR[l.id]}">${TYPE[l.type]}</span></div>
+    <div class="small muted">${st.total?`攻略済み｜累計${st.total}回`:"未攻略"}${c?`｜今回の育成で${cc[l.id]||0}回`:""}</div></div></div>
+    <p class="small" style="margin:10px 0">${esc(l.desc)}</p>
+    <button class="btn block ghost" data-lm="${l.id}">詳細とランキングを見る</button></div>`}).join("")}
+  ${S.landmarks?`<p class="small muted">テスト用に現在地周辺へ配置したランドマークを使用中です（設定から戻せます）。</p>`:`<p class="small muted">位置と判定範囲は仮の設定です。</p>`}`;
+}
+function lmDetailHTML(){
+  const l=lmById(route.sub.id);if(!l)return "";
+  const st=lmStats(l.id);const ms=METRICS[l.type];
+  const rule=l.type==="pass"?`START側エリア（半径${l.r}m）→ GOAL側エリアを通過すると1回。逆方向もOK。タイムは両エリア間の所要時間。`:l.type==="lap"?`${l.cps.length}つのチェックポイント（半径${l.r}m）を順番に回り、最初の地点に戻ると1周。`:`ランニング中に指定エリア（半径${l.r}m）へ入ると1回（1RUNにつき1回）。`;
+  return `<button class="btn ghost" id="backBtn" style="margin-bottom:10px">ランドマーク一覧へ戻る</button>
+  <div class="panel"><div class="row">${lmBadge(l)}<div class="grow"><h3>${esc(l.name)}</h3><span class="chip" style="color:${LMCOLOR[l.id]}">${TYPE[l.type]}</span></div></div>
+    <p class="small" style="margin:10px 0 6px">${esc(l.desc)}</p><p class="small muted" style="margin:0">判定：${rule}</p>
+    <div class="stats3" style="margin-top:12px"><div><b>${st.w}</b><span>今週</span></div><div><b>${st.total}</b><span>累計</span></div><div><b>${l.type==="arrival"?fmtKm(st.dist):(st.best?fmtDur(st.best):"--:--")}</b><span>${l.type==="arrival"?"総距離km":"自己ベスト"}</span></div></div>
+  </div>
+  <h3>ランキング</h3>
+  <div class="seg" role="group">${ms.map(([k,n])=>`<button data-metric="${k}" aria-pressed="${route.sub.metric===k}">${n}</button>`).join("")}</div>
+  <div class="panel flat" id="rankBox"><p class="small muted" style="margin:0">読み込み中…</p></div>`;
+}
+async function fillRanking(){
+  const sub=route.sub;const{list,shared}=await loadEntries();
+  if(route.tab!=="lm"||route.sub!==sub)return;
+  const rows=rankList(list,sub.id,sub.metric);const box=$("#rankBox");if(!box)return;
+  const me=myId();
+  // ranking achievements
+  let bestRank=Infinity;LMS().forEach(l=>METRICS[l.type].forEach(([k])=>{const r=rankList(list,l.id,k).find(r=>r.e.id===me);if(r)bestRank=Math.min(bestRank,r.rank)}));
+  if(shared&&bestRank<=100)S.flags.rank100=true;if(shared){if(bestRank<=10)S.flags.rank10=true;if(bestRank===1)S.flags.rank1=true;}
+  const fresh=checkAchievements();save();if(fresh.length){toast(`実績解除：${fresh.map(a=>"［"+a.plate+"］").join(" ")}`)}
+  if(!rows.length){box.innerHTML=`<p class="small muted" style="margin:0">まだ記録がありません。一番乗りをねらおう。</p>`;return}
+  const top=rows.slice(0,50);const mine=rows.find(r=>r.e.id===me);
+  const li=r=>`<li class="${r.e.id===me?"me":""}"><span class="rank">${r.rank}</span><div class="grow"><div style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.e.nickname||"ランナー")}${r.e.id===me?'<span class="small muted">（あなた）</span>':""}</div>${r.e.plate?`<span class="plate">${esc(r.e.plate)}</span>`:""}</div><b class="dot" style="font-weight:400;font-size:18px">${fmtMetric(sub.metric,r.v)}</b></li>`;
+  box.innerHTML=`<ul class="list">${top.map(li).join("")}${mine&&!top.includes(mine)?li(mine):""}</ul>
+  <p class="small muted" style="margin:8px 0 0">${shared?"同じ組織でこのアプリを使う人のランキングです。":"共有ランキングに接続できないため、自分の記録のみ表示しています。"}週は月曜はじまり。同じ記録は同順位。</p>`;
+}
+
+/* ---------- growth ---------- */
+function growHTML(){
+  const c=activeCycle();const lc=c||lastCycle();
+  let body="";
+  if(c){
+    const d=cycleDay(c);const rs=runsInCycle(c,14);const km=rs.reduce((a,r)=>a+r.dist,0);
+    const counts={};runsInCycle(c,7).forEach(r=>r.visits.forEach(v=>counts[v.lm]=(counts[v.lm]||0)+1));
+    const fav=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];
+    const hint=c.stage===1?(fav?`最近は${lmById(fav)?.name}によく行ってるみたい。その場所の影響を受けそう…？`:"まだどこのランドマークにも寄っていないみたい。"):`${LINE[c.line].name}になった。ここからは、走る距離や走る日の多さで姿が分かれるらしい。`;
+    body=`<div class="panel">
+      <div class="row between"><h3>DAY ${Math.min(d,14)} / 14</h3><span class="small muted">${c.start.replace(/-/g,"/")} 開始</span></div>
+      ${dayBar(c)}
+      <div class="bubble" style="margin-top:16px">${esc(hint)}</div>
+    </div>
+    <div class="panel flat">
+      <h3>最終進化の最低条件</h3>
+      <p class="small muted" style="margin:2px 0 10px">14日間で両方を満たすと、DAY14の終わりに最終進化して図鑑に登録されます。</p>
+      <div class="row small between"><span>ランニング</span><b>${rs.length} / 4回</b></div><div class="meter" style="margin:4px 0 10px"><i style="width:${Math.min(100,rs.length/4*100)}%"></i></div>
+      <div class="row small between"><span>累計走行距離</span><b>${fmtKm(km)} / 7km</b></div><div class="meter" style="margin-top:4px"><i style="width:${Math.min(100,km/7*100)}%"></i></div>
+      <p class="small muted" style="margin:10px 0 0">満たせなかった場合は、がんばりが「チケット」に変わります。</p>
+    </div>`;
+  }else{
+    const f=lc&&lc.status==="failed";
+    body=`<div class="panel" style="text-align:center">
+      <h3>${f?"今回は最終進化できませんでした":`${esc(charName(lc))}に育ちました`}</h3>
+      <p class="small muted">${f?"がんばりはチケットになりました。次の子と、また走ろう。":`${TIER[lc.final-1]} ${STAR(lc.final)}｜図鑑に登録済み`}</p>
+      <button class="btn primary block" id="nextCycle">次の水玉ねこを育てる</button></div>`;
+  }
+  const forms=[{stage:1},c&&c.stage>=2||lc&&lc.stage>=2?{stage:2,line:lc.line}:null,lc&&lc.stage===3?{stage:3,line:lc.line,tier:lc.final}:null];
+  return `<h2>キャラクター育成</h2>
+  <div class="panel"><div class="forms">
+    ${forms.map((f,i)=>`<div><div class="sprite-tile">${f?spriteSVG(f):spriteSVG({sil:true,stage:i+1,line:lc&&lc.line||"A",tier:2})}</div><div style="margin-top:4px">${["DAY1","DAY7","DAY14"][i]}</div></div>${i<2?'<span class="arrow">›</span>':""}`).join("")}
+  </div></div>
+  ${body}
+  <h2 style="margin-top:20px">図鑑 <span class="small muted" style="font-family:var(--body)">${Object.keys(S.collection).length}/9</span></h2>
+  <div class="dex">${["A","B","C"].flatMap(ln=>[1,2,3].map(t=>{const id=`${ln}-${t}`;const got=S.collection[id];
+    return `<div class="cell"><div class="sprite-tile">${spriteSVG({stage:3,line:ln,tier:t,sil:!got})}</div>${got?`<b>${FINAL[ln][t-1]}</b>`:`<b>？？？</b>`}<div class="muted">${STAR(t)}</div>${got?"":`<div class="muted" style="line-height:1.4">${LINE[ln].hint}が、${TIERHINT[t-1]}</div>`}</div>`})).join("")}</div>`;
+}
+
+/* ---------- achievements ---------- */
+function achHTML(){
+  const n=Object.keys(S.achievements).length;
+  return `<h2>実績とネームプレート</h2>
+  <p class="small muted" style="margin-top:-6px">${n}/30 解除｜解除したネームプレートをタップすると装備します（ランキングに表示）</p>
+  <div class="panel flat"><ul class="list">${ACH.map(a=>{const got=S.achievements[a.id];const eq=S.plate===a.id;
+    return `<li><div class="ach grow ${got?"":"locked"}"><span class="plate">${esc(a.plate)}</span>${got?`<button class="btn ${eq?"primary":"ghost"}" style="padding:4px 10px;font-size:12px" data-equip="${a.id}">${eq?"装備中":"装備"}</button>`:`<span class="small muted">未解除</span>`}<span class="small muted" style="grid-column:1/-1">${esc(a.cond)}</span></div></li>`}).join("")}</ul></div>`;
+}
+
+/* ---------- log ---------- */
+function logHTML(){
+  const rs=[...S.runs].reverse();
+  return `<h2>ランニング履歴</h2>
+  ${rs.length?`<div class="panel flat"><ul class="list">${rs.map(r=>`<li><button class="grow" data-run="${r.id}" style="background:none;border:0;text-align:left;padding:0">
+    <div class="row between"><b>${fmtDate(r.start)}</b><span class="dot" style="font-size:18px">${fmtKm(r.dist)}km</span></div>
+    <div class="small muted">${fmtDur(r.dur)}｜${fmtPace(r.pace)}/km${r.sim?"｜デモ":""}</div>
+    ${r.visits.length?`<div style="margin-top:4px">${[...new Set(r.visits.map(v=>v.lm))].map(id=>`<span class="chip" style="color:${LMCOLOR[id]};margin-right:4px">${esc(lmById(id)?.name||id)}</span>`).join("")}</div>`:""}
+  </button></li>`).join("")}</ul></div>`:`<div class="panel flat"><p class="small muted" style="margin:0">走った記録はここにたまっていきます。</p></div>`}`;
+}
+function runDetailHTML(){
+  const r=S.runs.find(r=>r.id===route.sub.id);if(!r)return "";
+  return `<button class="btn ghost" id="backBtn" style="margin-bottom:10px">履歴へ戻る</button>
+  <h2>${fmtDate(r.start)}</h2>${resultBody(r)}`;
+}
+function resultBody(r){
+  const byLm={};r.visits.forEach(v=>(byLm[v.lm]||(byLm[v.lm]=[])).push(v));
+  return `<div class="panel"><div class="stats3"><div><b>${fmtKm(r.dist)}</b><span>km</span></div><div><b>${fmtDur(r.dur)}</b><span>時間</span></div><div><b>${fmtPace(r.pace)}</b><span>平均ペース/km</span></div></div></div>
+  <canvas class="route" id="routeCanvas" aria-label="走行ルート（この端末のみに表示）"></canvas>
+  <p class="small muted" style="margin:4px 0 14px">ルートはこの端末だけに保存され、他の人には公開されません。</p>
+  <div class="panel flat"><h3 style="margin-bottom:4px">訪問ランドマーク</h3>
+  ${Object.keys(byLm).length?`<ul class="list">${Object.entries(byLm).map(([id,vs])=>{const l=lmById(id);const best=vs.filter(v=>v.time).map(v=>v.time).sort((a,b)=>a-b)[0];
+    return `<li>${l?lmBadge(l):""}<div class="grow"><b>${esc(l?l.name:id)}</b><div class="small muted">${l?TYPE[l.type]:""}｜${vs.length}回${best?`｜ベスト ${fmtDur(best)}`:""}</div></div></li>`}).join("")}</ul>`:`<p class="small muted" style="margin:0">今回はランドマークに寄りませんでした。</p>`}
+  </div>
+  ${r.splits&&r.splits.length?`<div class="panel flat"><h3>1kmごとのペース</h3><ul class="list">${r.splits.map((s,i)=>`<li><span class="grow small">${i+1}km</span><b class="dot" style="font-weight:400">${fmtPace(s)}</b></li>`).join("")}</ul></div>`:""}`;
+}
+function drawRoute(cv,r){
+  if(!cv)return;const dpr=window.devicePixelRatio||1;const w=cv.clientWidth,h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;
+  const ctx=cv.getContext("2d");ctx.scale(dpr,dpr);
+  const pts=r.route||[];const lms=LMS();const visited=new Set(r.visits.map(v=>v.lm));
+  const all=[...pts];lms.forEach(l=>{if(!visited.has(l.id)&&pts.length)return;if(l.type==="pass")all.push(l.start,l.goal);if(l.type==="lap")all.push(...l.cps);if(l.type==="arrival")all.push(l.center)});
+  const css=getComputedStyle(document.documentElement);const ink=css.getPropertyValue("--ink").trim();const muted=css.getPropertyValue("--muted").trim();
+  if(!all.length){ctx.fillStyle=muted;ctx.font="13px sans-serif";ctx.fillText("ルートがありません",16,28);return}
+  const o=all[0];const xy=p=>[(p[1]-o[1])*111320*Math.cos(o[0]*Math.PI/180),(p[0]-o[0])*111320];
+  const P=all.map(xy);let minx=Math.min(...P.map(p=>p[0])),maxx=Math.max(...P.map(p=>p[0])),miny=Math.min(...P.map(p=>p[1])),maxy=Math.max(...P.map(p=>p[1]));
+  const span=Math.max(maxx-minx,maxy-miny,200);const s=Math.min((w-40)/span,(h-40)/span);
+  const cx=(minx+maxx)/2,cy=(miny+maxy)/2;const T=p=>{const q=xy(p);return[w/2+(q[0]-cx)*s,h/2-(q[1]-cy)*s]};
+  lms.forEach(l=>{const col=LMCOLOR[l.id];const circ=(p,rad)=>{const[x,y]=T(p);ctx.beginPath();ctx.arc(x,y,Math.max(5,rad*s),0,7);ctx.fillStyle=col+"33";ctx.fill();ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke()};
+    const pp=l.type==="pass"?[l.start,l.goal]:l.type==="lap"?l.cps:[l.center];if(!visited.has(l.id)&&pts.length)return;
+    if(l.type!=="arrival"){ctx.setLineDash([4,4]);ctx.strokeStyle=col;ctx.beginPath();pp.concat(l.type==="lap"?[pp[0]]:[]).forEach((p,i)=>{const[x,y]=T(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();ctx.setLineDash([])}
+    pp.forEach(p=>circ(p,l.r));const[x,y]=T(pp[0]);ctx.fillStyle=col;ctx.font="bold 13px sans-serif";ctx.fillText(l.name,x+8,y-8)});
+  if(pts.length>1){ctx.strokeStyle=ink;ctx.lineWidth=3;ctx.lineJoin="round";ctx.beginPath();pts.forEach((p,i)=>{const[x,y]=T(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();
+    const[sx,sy]=T(pts[0]);ctx.fillStyle="#2F9A5E";ctx.fillRect(sx-5,sy-5,10,10);const[ex,ey]=T(pts[pts.length-1]);ctx.fillStyle="#E8453C";ctx.fillRect(ex-5,ey-5,10,10)}
+}
+
+/* ============ sheets / modals ============ */
+function overlay(html,center=false){
+  const o=document.createElement("div");o.className="overlay"+(center?" center-modal":"");o.innerHTML=`<div class="sheet">${html}</div>`;
+  o.addEventListener("click",e=>{if(e.target===o&&!center)o.remove()});$("#app").appendChild(o);return o;
+}
+function toast(msg,ms=3200){const t=document.createElement("div");t.className="toast";t.textContent=msg;$("#app").appendChild(t);setTimeout(()=>t.remove(),ms)}
+function openRunSheet(){
+  const o=overlay(`<h2>RUNの前に</h2>
+    <p class="small">走行中は画面を見続けたり操作したりせず、周りの安全を最優先にしてください。道路の横断は信号に従い、危ない場所には入らないでください。ランドマークに近づくと振動と画面でお知らせします。</p>
+    <button class="btn primary block" id="goGps" style="margin:8px 0 16px;padding:14px">GPSで計測をはじめる</button>
+    <h3>デモ走行（動作確認用）</h3>
+    <p class="small muted" style="margin:2px 0 8px">GPSを使わず、ランドマークを巡るルートを約50倍速で再生します。記録は通常のRUNとして保存されます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      ${LMS().map(l=>`<button class="btn ghost" data-demo="${l.id}">${esc(l.name)}</button>`).join("")}
+      <button class="btn ghost" data-demo="ALL">3か所を巡る</button>
+    </div>`);
+  $("#goGps",o).onclick=()=>{o.remove();startRun(false)};
+  o.querySelectorAll("[data-demo]").forEach(b=>b.onclick=()=>{o.remove();startRun(b.dataset.demo)});
+}
+function openSettings(){
+  const o=overlay(`<h2>設定</h2>
+    <label class="small" for="nick2" style="font-weight:700">ニックネーム</label>
+    <div class="row" style="margin:6px 0 18px"><input id="nick2" type="text" maxlength="12" value="${esc(S.nickname)}"><button class="btn" id="saveNick">保存</button></div>
+    <h3>テスト用ツール</h3>
+    <p class="small muted" style="margin:2px 0 8px">実装確認のための機能です。育成日数を進めると、DAY7・DAY14の進化判定を試せます。</p>
+    <div style="display:grid;gap:8px">
+      <button class="btn ghost" id="adv1">1日すすめる（現在 +${S.dayOffset||0}日）</button>
+      <button class="btn ghost" id="adv7">7日すすめる</button>
+      <button class="btn ghost" id="placeHere">現在地のまわりにランドマークを配置</button>
+      ${S.landmarks?`<button class="btn ghost" id="resetLm">ランドマークを長岡の設定に戻す</button>`:""}
+      <button class="btn ghost" id="wipe" style="color:var(--red)">すべてのデータを削除</button>
+    </div>
+    <p class="small muted" style="margin-top:14px">データはこの端末のブラウザに保存されます。ランキング用の集計（ニックネーム・ネームプレート・回数・タイム・距離）のみ共有されます。</p>`);
+  $("#saveNick",o).onclick=()=>{const v=$("#nick2",o).value.trim();if(v){S.nickname=v.slice(0,12);save();pushRanking();o.remove();render()}};
+  const adv=n=>{S.dayOffset=(S.dayOffset||0)+n;touchLogin();progress();checkAchievements();save();o.remove();render()};
+  $("#adv1",o).onclick=()=>adv(1);$("#adv7",o).onclick=()=>adv(7);
+  $("#placeHere",o).onclick=()=>{
+    if(!navigator.geolocation){toast("この端末では位置情報を使えません");return}
+    toast("現在地を取得しています…");
+    navigator.geolocation.getCurrentPosition(p=>{const c=[p.coords.latitude,p.coords.longitude];const park=offset(c,-350,-250);
+      S.landmarks=[{id:"A",name:"テスト橋",type:"pass",start:offset(c,-150,250),goal:offset(c,150,250),r:35,desc:"現在地の北側に置いたテスト用の通過型。西端から東端まで走ると攻略。"},
+        {id:"B",name:"テスト公園",type:"lap",cps:[offset(park,0,100),offset(park,100,0),offset(park,0,-100),offset(park,-100,0)],r:35,desc:"南西に置いたテスト用の周回型。4点を順に回ると1周。"},
+        {id:"C",name:"テスト広場",type:"arrival",center:offset(c,300,-100),r:45,desc:"東側に置いたテスト用の到達型。"}];
+      save();o.remove();toast("現在地のまわりにランドマークを配置しました");render()},
+      e=>toast("位置情報を取得できませんでした（"+(e.message||e.code)+"）"),{enableHighAccuracy:true,timeout:15000});
+  };
+  const rl=$("#resetLm",o);if(rl)rl.onclick=()=>{S.landmarks=null;save();o.remove();render()};
+  $("#wipe",o).onclick=()=>{if(confirm("記録・育成・実績をすべて削除します。元に戻せません。")){if(RT.db){try{RT.db.doc("ranking/"+myId()).delete()}catch(e){}}localStorage.removeItem(KEY);S=null;o.remove();render()}};
+}
+function showEvents(){
+  if(!S.events||!S.events.length||document.querySelector(".center-modal"))return;
+  const ev=S.events.shift();save();
+  let html="";
+  if(ev.kind==="evo2")html=`<h2>進化！</h2><div class="evo"><div class="sprite-tile">${spriteSVG()}</div><span class="dot">›</span><div class="sprite-tile after">${spriteSVG({stage:2,line:ev.line})}</div></div>
+    <h3>${LINE[ev.line].name}</h3><p class="small muted">${ev.none?"ランドマークに寄らなかったので、いちばん身近な姿になったみたい。":`この7日間、${esc(lmById(ev.line)?.name||"")}によく通ったからかな？`}</p>`;
+  if(ev.kind==="final")html=`<h2>最終進化！</h2><div class="evo"><div class="sprite-tile">${spriteSVG({stage:2,line:ev.line})}</div><span class="dot">›</span><div class="sprite-tile after">${spriteSVG({stage:3,line:ev.line,tier:ev.tier})}</div></div>
+    <h3>${FINAL[ev.line][ev.tier-1]}</h3><p class="small muted">${TIER[ev.tier-1]} ${STAR(ev.tier)}｜図鑑に登録しました</p>`;
+  if(ev.kind==="failed")html=`<h2>育成おわり</h2><div class="evo"><div class="sprite-tile">${cycleSprite(lastCycle())}</div></div>
+    <p class="small">14日間の最低条件にはあと少し届きませんでした。がんばりは「チケット」1枚になりました。</p>`;
+  const o=overlay(html+`<button class="btn primary block" id="evoOk">OK</button>`,true);
+  $("#evoOk",o).onclick=()=>{o.remove();const fresh=checkAchievements();save();if(fresh.length)toast(`実績解除：${fresh.map(a=>"［"+a.plate+"］").join(" ")}`);render()};
+}
+
+/* ============ RUN ============ */
+let RUN=null;
+function makeDetector(lms){
+  const st={};
+  lms.forEach(l=>{st[l.id]=l.type==="arrival"?{inside:false,done:false}:l.type==="pass"?{inS:false,inG:false,from:null,t0:0}:{inside:l.cps.map(()=>false),start:-1,dir:0,next:-1,seen:0,t0:0,last:-1}});
+  return(p,t)=>{
+    const ev=[];
+    lms.forEach(l=>{const s=st[l.id];
+      if(l.type==="arrival"){const inn=hav(p,l.center)<=l.r;if(inn&&!s.inside&&!s.done){s.done=true;ev.push({lm:l.id,time:null})}s.inside=inn}
+      if(l.type==="pass"){
+        const inS=hav(p,l.start)<=l.r,inG=hav(p,l.goal)<=l.r;const seg=hav(l.start,l.goal);
+        const hit=(zone,other)=>{if(s.from===other){const sec=(t-s.t0)/1000;if(sec>0&&seg/sec<=7)ev.push({lm:l.id,time:Math.round(sec)})}s.from=zone;s.t0=t};
+        if(inS&&!s.inS)hit("S","G");if(inG&&!s.inG)hit("G","S");
+        if(inS&&s.from==="S")s.t0=t;if(inG&&s.from==="G")s.t0=t;
+        s.inS=inS;s.inG=inG;
+      }
+      if(l.type==="lap"){
+        const n=l.cps.length;const per=l.cps.reduce((a,c,i)=>a+hav(c,l.cps[(i+1)%n]),0);
+        l.cps.forEach((cp,i)=>{const inn=hav(p,cp)<=l.r;
+          if(inn&&!s.inside[i]){
+            if(s.start<0){s.start=i;s.t0=t;s.seen=1;s.last=i}
+            else if(s.dir===0){if(i===(s.start+1)%n)s.dir=1;else if(i===(s.start-1+n)%n)s.dir=-1;else if(i!==s.last){s.start=i;s.t0=t;s.seen=1;s.last=i;return}
+              if(s.dir){s.seen=2;s.next=(i+s.dir+n)%n;s.last=i}}
+            else if(i===s.next){
+              if(i===s.start&&s.seen>=n){const sec=(t-s.t0)/1000;if(sec>0&&per/sec<=7)ev.push({lm:l.id,time:Math.round(sec)});s.t0=t;s.seen=1;s.next=(i+s.dir+n)%n}
+              else{s.seen++;s.next=(i+s.dir+n)%n}
+              s.last=i;
+            }else if(i!==s.last){s.start=i;s.t0=t;s.seen=1;s.dir=0;s.last=i}
+          }
+          if(inn&&i===s.start&&s.seen===1)s.t0=t;
+          s.inside[i]=inn});
+      }
+    });
+    return ev;
+  };
+}
+function demoPath(which){
+  const lms=LMS();const seq=which==="ALL"?lms:[lmById(which)];
+  const way=[];
+  seq.forEach(l=>{if(l.type==="pass")way.push(l.start,l.goal);if(l.type==="lap")way.push(...l.cps,l.cps[0]);if(l.type==="arrival")way.push(l.center)});
+  const first=way[0],lastW=way[way.length-1];
+  const path=[offset(first,-250,-180),...way,offset(lastW,220,160)];
+  const out=[];
+  for(let i=0;i<path.length-1;i++){const a=path[i],b=path[i+1];const d=hav(a,b);const k=Math.max(1,Math.round(d/12));for(let j=0;j<k;j++){const f=j/k;out.push([a[0]+(b[0]-a[0])*f+(Math.random()-.5)*0.00003,a[1]+(b[1]-a[1])*f+(Math.random()-.5)*0.00003])}}
+  out.push(path[path.length-1]);return out;
+}
+function startRun(demo){
+  RUN={sim:!!demo,startAbs:now(),clock0:0,elapsed:0,dist:0,last:null,lastT:0,route:[],visits:[],det:makeDetector(LMS()),splits:[],nextKm:1000,lastKmT:0,watch:null,timer:null,gps:"",wake:null};
+  const el=document.createElement("section");el.id="run";el.setAttribute("aria-live","polite");
+  el.innerHTML=`<div class="label">経過時間</div><div class="big" id="rTime">00:00</div>
+    <div class="mid"><div><b id="rDist">0.00</b><span class="small">km</span></div><div><b id="rPace">--'--"</b><span class="small">平均ペース/km</span></div></div>
+    <div class="gps" id="rGps">${demo?"デモ走行を再生中":"GPSを探しています…"}</div>
+    <div class="lmrow" id="rLm">${LMS().map(l=>`<span data-l="${l.id}">${esc(l.name)}</span>`).join("")}</div>
+    <button class="hold" id="rEnd" aria-label="長押しでRUNを終了"><div class="fill"></div><span>長押しで RUN END</span></button>`;
+  $("#app").appendChild(el);
+  const endBtn=$("#rEnd");let holdT=null,holdStart=0;const fill=endBtn.querySelector(".fill");
+  const down=e=>{e.preventDefault();holdStart=performance.now();const step=()=>{const k=(performance.now()-holdStart)/900;fill.style.transform=`scaleX(${Math.min(1,k)})`;if(k>=1){holdT=null;endRun();return}holdT=requestAnimationFrame(step)};holdT=requestAnimationFrame(step)};
+  const up=()=>{if(holdT)cancelAnimationFrame(holdT);holdT=null;fill.style.transform="scaleX(0)"};
+  endBtn.addEventListener("pointerdown",down);["pointerup","pointerleave","pointercancel"].forEach(x=>endBtn.addEventListener(x,up));
+  try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(w=>RUN&&(RUN.wake=w)).catch(()=>{})}catch(e){}
+  if(demo){
+    const pts=demoPath(demo);let i=0;const stepSec=12/3.0;
+    RUN.timer=setInterval(()=>{
+      if(i>=pts.length){$("#rGps").textContent="デモルートを走りきりました。長押しで終了してください";return}
+      RUN.elapsed+=stepSec*1000*(0.9+Math.random()*0.2);feed(pts[i++],RUN.elapsed);updateRunUI();
+    },70);
+  }else{
+    const t0=Date.now();RUN.clock0=t0;
+    RUN.timer=setInterval(()=>{RUN.elapsed=Date.now()-t0;updateRunUI()},500);
+    if(!navigator.geolocation){$("#rGps").textContent="この端末では位置情報を使えません";return}
+    RUN.watch=navigator.geolocation.watchPosition(p=>{
+      const acc=p.coords.accuracy;const t=Date.now()-t0;
+      if(acc>50){$("#rGps").textContent=`GPSの精度が低いため待機中（±${Math.round(acc)}m）`;return}
+      $("#rGps").textContent=`GPS良好（±${Math.round(acc)}m）`;
+      feed([p.coords.latitude,p.coords.longitude],t);
+    },e=>{$("#rGps").textContent=e.code===1?"位置情報が許可されていません。ブラウザの設定で許可してください（デモ走行も使えます）":"位置情報を取得できません（"+(e.message||e.code)+"）"},{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+  }
+}
+function feed(p,t){
+  const R=RUN;
+  if(R.last){
+    const d=hav(R.last,p);const dt=(t-R.lastT)/1000;
+    if(dt<=0)return;
+    if(d/dt>8){R.lastT=t;return} // GPSジャンプを除外
+    if(!R.sim&&d<3)return;
+    const before=R.dist;R.dist+=d;
+    while(R.dist>=R.nextKm){const f=(R.nextKm-before)/d;const kt=R.lastT+(t-R.lastT)*f;R.splits.push(Math.round((kt-R.lastKmT)/1000));R.lastKmT=kt;R.nextKm+=1000}
+  }
+  R.last=p;R.lastT=t;
+  const lr=R.route[R.route.length-1];if(!lr||hav(lr,p)>=10)R.route.push([+p[0].toFixed(6),+p[1].toFixed(6)]);
+  R.det(p,t).forEach(ev=>{
+    R.visits.push({lm:ev.lm,t:R.startAbs+t,time:ev.time});
+    const l=lmById(ev.lm);vib([120,60,120]);
+    const verb={pass:"通過",lap:"1周",arrival:"到達"}[l.type];
+    toast(`${l.name} ${verb}！${ev.time?"（"+fmtDur(ev.time)+"）":""}`);
+    const chip=document.querySelector(`#rLm [data-l="${l.id}"]`);if(chip)chip.classList.add("got");
+  });
+}
+function updateRunUI(){
+  if(!RUN)return;const sec=RUN.elapsed/1000;const km=RUN.dist/1000;
+  $("#rTime").textContent=fmtDur(sec);$("#rDist").textContent=fmtKm(km);$("#rPace").textContent=km>=0.05?fmtPace(sec/km):"--'--\"";
+}
+async function endRun(){
+  const R=RUN;if(!R)return;RUN=null;
+  clearInterval(R.timer);if(R.watch!=null)navigator.geolocation.clearWatch(R.watch);try{R.wake&&R.wake.release()}catch(e){}
+  $("#run").remove();
+  const dist=R.dist/1000,dur=Math.round(R.elapsed/1000);
+  if(dur<5){toast("記録が短すぎるため保存しませんでした");return}
+  const prev=[...S.runs];
+  const run={id:"r"+Date.now(),start:R.startAbs,end:R.startAbs+dur*1000,dist:Math.round(dist*1000)/1000,dur,pace:dist>=0.05?Math.round(dur/dist):null,splits:R.splits,visits:R.visits,route:R.route,sim:R.sim};
+  // event-based flags
+  const f=S.flags;const lp=prev[prev.length-1];
+  if(lp){const gap=daysBetween(dstr(lp.start),dstr(run.start));if(gap>=7)f.back7=true;if(gap>=14){f.back14=true;S.comebacks=(S.comebacks||0)+1}}
+  const sp=run.splits;
+  if(sp.length>=2&&Math.max(...sp)-Math.min(...sp)>=120)f.paceGap=true;
+  if(dist>=2&&run.route.length>2){const h=Math.floor(sp.length/2);if(sp.length>=2&&h>=1){const a=sp.slice(0,h),b=sp.slice(h);if(b.reduce((x,y)=>x+y,0)/b.length<a.reduce((x,y)=>x+y,0)/a.length-5)f.negSplit=true}}
+  if(sp.length>=3){const rest=sp.slice(1);const ra=rest.reduce((x,y)=>x+y,0)/rest.length;if(ra-sp[0]>=60)f.fastStart=true}
+  if(prev.length>=3){const avg=prev.reduce((a,r)=>a+r.dist,0)/prev.length;if(avg>0&&dist>=avg*1.5)f.far=true}
+  const seen=new Set(prev.flatMap(r=>r.visits.map(v=>v.lm)));if(new Set(run.visits.map(v=>v.lm).filter(id=>!seen.has(id))).size>=2)f.detour=true;
+  S.runs.push(run);touchLogin();progress();
+  const fresh=checkAchievements();save();pushRanking();
+  showResult(run,fresh);
+}
+function showResult(run,fresh){
+  const c=activeCycle();
+  const o=overlay(`<h2>RUN結果</h2>
+    ${resultBody(run)}
+    ${fresh.length?`<div class="panel" style="text-align:center"><h3>実績解除！</h3><div style="margin:8px 0">${fresh.map(a=>`<span class="plate" style="margin:3px">${esc(a.plate)}</span>`).join("")}</div><p class="small muted" style="margin:0">実績タブで装備できます</p></div>`:""}
+    <div class="row" style="align-items:flex-start;margin:6px 0 18px"><div class="sprite-tile" style="width:64px;flex:none">${cycleSprite(c||lastCycle())}</div><div class="bubble grow" id="aiBox" style="margin-top:10px"><span class="muted">考え中…</span></div></div>
+    <button class="btn primary block" id="doneBtn">ホームへ</button>`);
+  o.querySelector(".sheet").style.maxHeight="100%";
+  drawRoute($("#routeCanvas",o),run);
+  $("#doneBtn",o).onclick=()=>{o.remove();go("home")};
+  const box=$("#aiBox",o);
+  aiComment(run,fresh,t=>{box.textContent=t}).then(t=>{box.textContent=t;S.aiLast=t;save()});
+}
+
+/* ============ boot ============ */
+function isPhone(){
+  const ua=navigator.userAgent;if(/Android|iPhone|iPod|Mobile/i.test(ua))return true;
+  return matchMedia("(pointer:coarse)").matches&&Math.min(screen.width,screen.height)<=900;
+}
+function boot(){
+  if(S){touchLogin();progress();checkAchievements();save()}
+  render();
+}
+if(isPhone()){boot()}
+else{
+  const g=$("#gate");g.classList.remove("hidden");$("#gateSprite").innerHTML=spriteSVG();
+  $("#previewBtn").onclick=()=>{g.classList.add("hidden");document.body.classList.add("preview");boot()};
+}
+</script>
+</body>
+</html>
